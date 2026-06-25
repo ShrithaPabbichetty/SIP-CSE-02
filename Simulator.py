@@ -14,15 +14,14 @@ def baselineMetrics (response_length, token_time):
 
 
 
-def simulateRound (device, numOfTokensGenerated, response_length):
+def simulateRound (device, tokensRemaining):
     accepted = 0
     rejected = 0
 
     #for i in range(draft_size):
-    while numOfTokensGenerated < response_length:
+    while accepted < tokensRemaining:
         if random.random() < device.accuracypredcttion:
             accepted += 1
-            numOfTokensGenerated += 1
         else:
             rejected += 1
             break 
@@ -33,22 +32,24 @@ def simulateRound (device, numOfTokensGenerated, response_length):
             
 
 
-def simulateResponse (device, numOfTokensGenerated, response_length):
-    while response_length > numOfTokensGenerated:
-        accepted, rejected = simulateRound(device, numOfTokensGenerated, response_length)
+def simulateResponse (device, response_length):
+    totalaccepted, totalrejected, totalGenerated = 0, 0, 0
+    while totalGenerated < response_length:
+        accepted, rejected = simulateRound(device, response_length - totalGenerated)
+        totalaccepted += accepted
+        totalrejected += rejected
+        totalGenerated += (accepted + rejected)
         print("")
         print(response_length)
-        print(numOfTokensGenerated)
-        #response_length -= accepted
-        if rejected > 0:
-            numOfTokensGenerated += 1
+        print(totalGenerated)
+
     
-    latency = device.draft_token_time * (numOfTokensGenerated)
+    latency = device.draft_token_time * (totalGenerated)
     return SimulationResult(
         latency=latency,
         accuracy=device.accuracypredcttion,
-        numOfAcceptedTokens=accepted,
-        numOfRejectedTokens=rejected,
+        numOfAcceptedTokens=totalaccepted,
+        numOfRejectedTokens=totalrejected,
         num_devices=1,
         is_async=False
 
@@ -57,9 +58,8 @@ def simulateResponse (device, numOfTokensGenerated, response_length):
 def main(): 
     device = EdgeDevice(device_id="device_1", draft_token_time=0.5, accuracypredcttion=0.8, numberOftokensGenerated=10)
     response_length = 5
-    draft_size = 3
 
-    result = simulateResponse(device, draft_size, response_length)
+    result = simulateResponse(device, response_length)
     print(result)
 
 

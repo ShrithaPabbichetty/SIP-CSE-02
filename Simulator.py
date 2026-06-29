@@ -1,132 +1,136 @@
 from simulationOutputMetrics import SimulationResult
 from edgeDevice import EdgeDevice
-import random 
+import random
 
-def baselineMetrics (response_length, token_time):
+
+def baselineMetrics(response_length, token_time):
     return SimulationResult(
         latency=token_time * response_length,
         accuracy=None,
         numOfAcceptedTokens=response_length,
         numOfRejectedTokens=0,
-        num_devices= 1,
-        is_async=False
+        num_devices=1,
+        is_async=False,
+        verifierCalls=0,
+        draftCalls=0,
+        speedup_vs_baseline=None,
     )
 
 
-
-def simulateRound (device, tokensRemaining):
+def simulateRound(device, tokensRemaining, speculative_window, rnd):
     accepted = 0
     rejected = 0
-
-    draft_size = min(device.numberOftokensGenerated, tokensRemaining)
-    for i in range(draft_size):
-        if random.random() < device.accuracyprediction:
+    max_tokens = min(tokensRemaining, speculative_window)
+    for _ in range(max_tokens):
+        if rnd.random() < device.accuracypredcttion:
             accepted += 1
         else:
             rejected += 1
-            break 
-
+            break
     return accepted, rejected
-    
-  
-            
 
 
-def simulateResponse (device, response_length):
-    totalaccepted, totalrejected, totalGenerated = 0, 0, 0
+def simulateResponse(device, response_length, speculative_window=1, verifier_step_time=0.0, seed=None):
+    rnd = random.Random(seed)
+    totalaccepted = 0
+    totalrejected = 0
+    totalGenerated = 0
+    latency = 0.0
+    verifier_calls = 0
+    draft_calls = 0
+
     while totalGenerated < response_length:
-        accepted, rejected = simulateRound(device, response_length - totalGenerated)
+        accepted, rejected = simulateRound(device, response_length - totalGenerated, speculative_window, rnd)
         totalaccepted += accepted
         totalrejected += rejected
-        totalGenerated += (accepted + rejected)
-        print("")
-        print(response_length)
-        print(totalGenerated)
+        totalGenerated += accepted + rejected
+        verifier_calls += 1
+        draft_calls += 1
+        latency += verifier_step_time
+        latency += device.draft_token_time * (accepted + rejected)
 
-    
-    latency = device.draft_token_time * (totalGenerated)
+    baseline_latency = baselineMetrics(response_length, device.draft_token_time).latency
+    speedup = baseline_latency / latency if latency > 0 else None
+
     return SimulationResult(
         latency=latency,
-        accuracy=device.accuracyprediction,
+        accuracy=device.accuracypredcttion,
         numOfAcceptedTokens=totalaccepted,
         numOfRejectedTokens=totalrejected,
         num_devices=1,
-        is_async=False
-
+        is_async=False,
+        verifierCalls=verifier_calls,
+        draftCalls=draft_calls,
+        speedup_vs_baseline=speedup,
     )
 
-def simulateMultiDeviceResponse (devices, response_length, communication_times):
-    totalaccepted, totalrejected, totalGenerated = 0, 0, 0
-    totalLatency = 0.0
-    deviceIndex = 0
 
+def simulateMultiDevice(devices, response_length, speculative_window=1, verifier_step_time=0.0, seed=None):
+    rnd = random.Random(seed)
+    totalAccepted = 0
+    totalRejected = 0
+    totalGenerated = 0
+    latency = 0.0
+    verifier_calls = 0
+    draft_calls = 0
+
+    # parallel rounds
     while totalGenerated < response_length:
-        device = devices[deviceIndex % len(devices)]
-        delay = communication_times[deviceIndex % len(communication_times)]
-        tokensRemaining = response_length - totalGenerated
-        accepted, rejected = simulateRound(device, tokensRemaining)
+        round_results = []  # (accepted, rejected, device)
+        for d in devices:
+            if totalGenerated >= response_length:
+                break
+            accepted, rejected = simulateRound(d, response_length - totalGenerated, speculative_window, rnd)
+            round_results.append((accepted, rejected, d))
+            totalAccepted += accepted
+            totalRejected += rejected
+            totalGenerated += accepted + rejected
+            draft_calls += 1
 
-        tokensAttempted = accepted + rejected
-        roundLatency = delay * 2 + device.draft_token_time * tokensAttempted
-        totalLatency += roundLatency
+        verifier_calls += 1
 
-        if rejected > 0:
-            tokensAdvanced = min(accepted+1, tokensRemaining)
-        else:
-            tokensAdvanced = min(accepted, tokensRemaining)
+        max_arrival = 0.0
+        for accepted_tokens, rejected_tokens, device in round_results:
+            draft_size = accepted_tokens + rejected_tokens
+            arrival_time = device.draft_token_time * draft_size + device.comm_delay
+            if arrival_time > max_arrival:
+                max_arrival = arrival_time
+        roundLatency = max_arrival + verifier_step_time
+        latency += roundLatency
 
-        totalaccepted += accepted
-        totalrejected += rejected
-        totalGenerated += tokensAdvanced
-
-        print(
-            f"Device {device.device_id} generated {tokensAttempted} tokens, "
-            f"accepted: {accepted}, "
-            f"rejected: {rejected}, "
-            f"advanced: {tokensAdvanced}, "
-            f"totalGenerated: {totalGenerated}/{response_length}, "
-            f"roundLatency: {roundLatency:.2f}s, "
-            f"totalLatency: {totalLatency:.2f}s"
-        )
-            
-        
-        deviceIndex += 1
-    
-    totalAccuracy = 0
-    for i in devices:
-        totalAccuracy += i.accuracyprediction
-    averageAccuracy = totalAccuracy / len(devices)
+    avg_token_time = sum(d.draft_token_time for d in devices) / len(devices)
+    baseline_latency = baselineMetrics(response_length, avg_token_time).latency
+    speedup = baseline_latency / latency if latency > 0 else None
 
     return SimulationResult(
-        latency=totalLatency,
-        accuracy=averageAccuracy,
-        numOfAcceptedTokens=totalaccepted,
-        numOfRejectedTokens=totalrejected,
+        latency=latency,
+        accuracy=None,
+        numOfAcceptedTokens=totalAccepted,
+        numOfRejectedTokens=totalRejected,
         num_devices=len(devices),
-        is_async=False
+        is_async=False,
+        verifierCalls=verifier_calls,
+        draftCalls=draft_calls,
+        speedup_vs_baseline=speedup,
     )
 
 
-    
-
-def main(): 
-    device = EdgeDevice(device_id="device_1", draft_token_time=0.5, accuracyprediction=0.8, numberOftokensGenerated=10, communication_time = 0.1)
-
-    device2 = EdgeDevice(device_id="device-2", draft_token_time=0.8, accuracyprediction=0.9, numberOftokensGenerated=4, communication_time = 0.2)
-    device3 = EdgeDevice(device_id="device-3", draft_token_time=0.2, accuracyprediction=0.7, numberOftokensGenerated=3, communication_time = 0.3)
-    device4 = EdgeDevice(device_id="device-4", draft_token_time=0.3, accuracyprediction=0.85, numberOftokensGenerated=3, communication_time = 0.4)
-    communication_times = [device.communication_time, device2.communication_time, device3.communication_time]
-
+def main():
+    devices = [
+        EdgeDevice(device_id="device_1", draft_token_time=0.9, accuracypredcttion=0.2, numberOftokensGenerated=10, comm_delay=0.1),
+        EdgeDevice(device_id="device_2", draft_token_time=0.9, accuracypredcttion=0.5, numberOftokensGenerated=12, comm_delay=0.25),
+        EdgeDevice(device_id="device_3", draft_token_time=0.9, accuracypredcttion=0.1, numberOftokensGenerated=8, comm_delay=0.2),
+    ]
     response_length = 10
+    speculative_window = 3
+    verifier_step_time = 0.05
+    seed = 10
 
+    result_single = simulateResponse(devices[0], response_length, speculative_window=speculative_window, verifier_step_time=verifier_step_time, seed=seed)
+    print("Single-device result:", result_single)
 
-    print("Simulating single device response:")
-    result = simulateResponse(device, response_length)
-    print(result)
-
-    print("\nSimulating multi-device response:")
-    multi_device_result = simulateMultiDeviceResponse([device, device2, device3, device4], response_length, communication_times)
-    print(multi_device_result)
+    result_multi = simulateMultiDevice(devices, response_length, speculative_window=speculative_window, verifier_step_time=verifier_step_time, seed=seed)
+    print("Multi-device result:", result_multi)
 
 
 if __name__ == "__main__":

@@ -1,0 +1,10 @@
+from dataclasses import dataclass
+
+@dataclass
+class SimulationResult:
+    accuracy: float
+    latency: float
+    time: float
+    numOfAcceptedTokens: int
+    numOfRejectedTokens: int
+    

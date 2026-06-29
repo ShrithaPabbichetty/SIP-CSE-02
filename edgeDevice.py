@@ -3,5 +3,6 @@ from dataclasses import dataclass
 class EdgeDevice:
     device_id: str
     draft_token_time: float
-    accuracypredcttion: float
+    accuracyprediction: float
     numberOftokensGenerated: int
+    communication_time: float

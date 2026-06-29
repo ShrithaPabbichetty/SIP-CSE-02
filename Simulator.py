@@ -2,9 +2,13 @@ from simulationOutputMetrics import SimulationResult
 from edgeDevice import EdgeDevice
 import random 
 
-def baselineMetrics (response_length, token_time):
+
+#random.seed(42)  # Set a fixed seed for reproducibility
+
+
+def baselineMetrics (response_length, token_time, verifier_time):
     return SimulationResult(
-        latency=token_time * response_length,
+        latency=(token_time * response_length) + verifier_time,
         accuracy=None,
         numOfAcceptedTokens=response_length,
         numOfRejectedTokens=0,
@@ -55,7 +59,7 @@ def simulateResponse (device, response_length):
 
     )
 
-def simulateMultiDeviceResponse (devices, response_length, communication_times):
+def simulateMultiDeviceResponse (devices, response_length, communication_times, verifier_time):
     totalaccepted, totalrejected, totalGenerated = 0, 0, 0
     totalLatency = 0.0
     deviceIndex = 0
@@ -67,7 +71,7 @@ def simulateMultiDeviceResponse (devices, response_length, communication_times):
         accepted, rejected = simulateRound(device, tokensRemaining)
 
         tokensAttempted = accepted + rejected
-        roundLatency = delay * 2 + device.draft_token_time * tokensAttempted
+        roundLatency = delay * 2 + device.draft_token_time * tokensAttempted + verifier_time 
         totalLatency += roundLatency
 
         if rejected > 0:
@@ -110,24 +114,36 @@ def simulateMultiDeviceResponse (devices, response_length, communication_times):
     
 
 def main(): 
-    device = EdgeDevice(device_id="device_1", draft_token_time=0.5, accuracyprediction=0.8, numberOftokensGenerated=10, communication_time = 0.1)
+    device = EdgeDevice(device_id="device_1", draft_token_time=0.5, accuracyprediction=0.9, numberOftokensGenerated=10, communication_time = 0.1)
 
-    device2 = EdgeDevice(device_id="device-2", draft_token_time=0.8, accuracyprediction=0.9, numberOftokensGenerated=4, communication_time = 0.2)
+    device2 = EdgeDevice(device_id="device-2", draft_token_time=0.15, accuracyprediction=0.6, numberOftokensGenerated=4, communication_time = 0.2)
     device3 = EdgeDevice(device_id="device-3", draft_token_time=0.2, accuracyprediction=0.7, numberOftokensGenerated=3, communication_time = 0.3)
-    device4 = EdgeDevice(device_id="device-4", draft_token_time=0.3, accuracyprediction=0.85, numberOftokensGenerated=3, communication_time = 0.4)
+    device4 = EdgeDevice(device_id="device-4", draft_token_time=0.3, accuracyprediction=0.75, numberOftokensGenerated=3, communication_time = 0.4)
     communication_times = [device.communication_time, device2.communication_time, device3.communication_time]
 
     response_length = 10
 
 
-    print("Simulating single device response:")
+    '''print("Simulating single device response:")
     result = simulateResponse(device, response_length)
-    print(result)
+    print(result)'''
+
+    verifier_time = 0.5  
 
     print("\nSimulating multi-device response:")
-    multi_device_result = simulateMultiDeviceResponse([device, device2, device3, device4], response_length, communication_times)
+    multi_device_result = simulateMultiDeviceResponse([device, device2, device3, device4], response_length, communication_times, verifier_time)
     print(multi_device_result)
+    print(baselineMetrics(response_length, device.draft_token_time, verifier_time).latency)
+
+    speedup = baselineMetrics(response_length, device.draft_token_time, verifier_time).latency/ multi_device_result.latency
+    print(f"\nSpeedup of multi-device over baseline: {speedup:.2f}")
 
 
 if __name__ == "__main__":
     main()
+
+    
+    
+
+
+    

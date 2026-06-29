@@ -81,12 +81,11 @@ class Simulator:
             elif actual_round == 2: activos = [self.devices[0], self.devices[1], self.devices[2]]
             else: activos = self.devices
 
-            # Definir el maxtime y la latenia por ronda
+    
             device = random.choice(activos)
             max_time = max(d.draft_token_time for d in activos)
             round_latency = max_time + self.verifier_step_time
             
-            # Speculative generation
             round_accepted = 0
             round_rejected = 0
             for _ in range(self.speculative_window):
@@ -107,16 +106,14 @@ class Simulator:
             arrival_time = (draft_size * device.draft_token_time) + delay
             
             self.total_latency += round_latency
-            
-            # 4. Actualizar cont.
+        
             self.accepted_tokens += round_accepted
             self.rejected_tokens += round_rejected
             total_generated += draft_size
             
             print(f"Round {round_number} | Device: {device.device_id} | Arrival: {arrival_time:.4f} | Round Latency: {round_latency:.4f}")
             round_number += 1
-        
-        #Speedup 
+    
         baseline_latency = self.config.maxResponseLength * 1.0 
         speedup = baseline_latency / self.total_latency if self.total_latency > 0 else 0
         print(f"Verifier Calls: {len(self.devices) * round_number}")

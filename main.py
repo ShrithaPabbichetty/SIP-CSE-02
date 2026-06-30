@@ -6,10 +6,10 @@ from Simulator import MultiEdgeSpeculativeSimulator
 import random
 
 def main():
-    device1 = EdgeDevice(device_id="device-1", draft_token_time=5.6, accuracyprediction=0.9, numberOftokensGenerated=10, communication_time=6.7)
-    device2 = EdgeDevice(device_id="device-2", draft_token_time=9.2, accuracyprediction=0.6, numberOftokensGenerated=4, communication_time=3.3)
-    device3 = EdgeDevice(device_id="device-3", draft_token_time=6.2, accuracyprediction=0.7, numberOftokensGenerated=3, communication_time=3.1)
-    device4 = EdgeDevice(device_id="device-4", draft_token_time=7.1, accuracyprediction=0.75, numberOftokensGenerated=3, communication_time=2.8)
+    device1 = EdgeDevice(device_id="device-1", draft_token_time=5.6, accuracy=0.9,  number_of_tokens_generated=10, communication_time=6.7)
+    device2 = EdgeDevice(device_id="device-2", draft_token_time=9.2, accuracy=0.6,  number_of_tokens_generated=4, communication_time=3.3)
+    device3 = EdgeDevice(device_id="device-3", draft_token_time=6.2, accuracy=0.7,  number_of_tokens_generated=3, communication_time=3.1)
+    device4 = EdgeDevice(device_id="device-4", draft_token_time=7.1, accuracy=0.75,  number_of_tokens_generated=3, communication_time=2.8)
 
     devices = [device1, device2, device3, device4]
 

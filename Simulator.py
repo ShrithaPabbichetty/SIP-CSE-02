@@ -28,8 +28,8 @@ class MultiEdgeSpeculativeSimulator:
         return SimulationResult(
             latency=self.target_token_time * self.response_length,
             accuracy=None,
-            numOfAcceptedTokens=0,
-            numOfRejectedTokens=0,
+            num_of_accepted_tokens=0,
+            num_of_rejected_tokens=0,
             num_devices=1,
             is_async=False,
             draft_calls=0,
@@ -41,13 +41,13 @@ class MultiEdgeSpeculativeSimulator:
         rejected = 0
 
         draft_size = min(
-            device.numberOftokensGenerated,
+            device.number_of_tokens_generated,
             tokens_remaining,
             self.speculative_window
         )
 
         for i in range(draft_size):
-            if self.rnd.random() < device.accuracyprediction:
+            if self.rnd.random() < device.accuracy:
                 accepted += 1
             else:
                 rejected += 1
@@ -132,51 +132,10 @@ class MultiEdgeSpeculativeSimulator:
         return SimulationResult(
             latency=total_latency,
             accuracy=total_accuracy,
-            numOfAcceptedTokens=total_accepted,
-            numOfRejectedTokens=total_rejected,
+            num_of_accepted_tokens=total_accepted,
+            num_of_rejected_tokens=total_rejected,
             num_devices=self.num_devices,
             is_async=self.is_async,
             draft_calls=draft_calls,
             verifier_calls=verifier_calls
         )
-
-
-def main():
-    device1 = EdgeDevice(device_id="device-1", draft_token_time=5.6, accuracyprediction=0.9, numberOftokensGenerated=10, communication_time=6.7)
-    device2 = EdgeDevice(device_id="device-2", draft_token_time=9.2, accuracyprediction=0.6, numberOftokensGenerated=4, communication_time=3.3)
-    device3 = EdgeDevice(device_id="device-3", draft_token_time=6.2, accuracyprediction=0.7, numberOftokensGenerated=3, communication_time=3.1)
-    device4 = EdgeDevice(device_id="device-4", draft_token_time=7.1, accuracyprediction=0.75, numberOftokensGenerated=3, communication_time=2.8)
-
-    devices = [device1, device2, device3, device4]
-
-    config = SimulationConfig(
-        num_devices=len(devices),
-        is_async=False,
-        device_ids=devices,
-        response_length=10,
-        target_token_time=40,
-        verifier_time=30,
-        speculative_window=3,
-        seed=10,
-        round_schedule=[
-            [device1, device3],
-            [device2, device3, device4],
-            [device1, device4],
-        ]
-    )
-
-    sim = MultiEdgeSpeculativeSimulator(config)
-
-    baseline = sim.run_baseline()
-    print("Baseline latency:", baseline.latency)
-
-    print("\nSimulating multi-device response:")
-    multi_result = sim.run()
-    print(multi_result)
-
-    speedup = baseline.latency / multi_result.latency
-    print("\nSpeedup of multi-device over baseline:", round(speedup, 2))
-
-
-if __name__ == "__main__":
-    main()

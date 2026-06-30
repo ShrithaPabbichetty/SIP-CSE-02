@@ -5,4 +5,4 @@ class SimulationConfig:
     num_devices: int
     is_async: bool
     device_ids: list[str]
-    maxResponseLength: int
+    max_response_length: int

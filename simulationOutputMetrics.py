@@ -8,3 +8,5 @@ class SimulationResult:
     numOfRejectedTokens: int
     num_devices: int
     is_async: bool
+    draft_calls: int 
+    verifier_calls: int

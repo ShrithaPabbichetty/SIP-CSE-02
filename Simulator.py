@@ -1,132 +1,142 @@
 from simulationOutputMetrics import SimulationResult
 from edgeDevice import EdgeDevice
-import random 
+import random
 
-def baselineMetrics (response_length, token_time):
+
+def run_baseline(response_length, verifier_token_time):
     return SimulationResult(
-        latency=token_time * response_length,
+        latency=verifier_token_time * response_length,
         accuracy=None,
-        numOfAcceptedTokens=response_length,
+        numOfAcceptedTokens=0,
         numOfRejectedTokens=0,
-        num_devices= 1,
+        num_devices=1,
         is_async=False
     )
 
 
-
-def simulateRound (device, tokensRemaining):
+def simulate_round(device, tokens_remaining, speculative_window, rnd):
     accepted = 0
     rejected = 0
-
-    draft_size = min(device.numberOftokensGenerated, tokensRemaining)
+    
+    draft_size = min(
+        device.numberOftokensGenerated, 
+        tokens_remaining,
+        speculative_window
+    )
+    
     for i in range(draft_size):
-        if random.random() < device.accuracyprediction:
+        if rnd.random() < device.accuracyprediction:
             accepted += 1
         else:
             rejected += 1
-            break 
+            break
 
     return accepted, rejected
-    
-  
-            
 
 
-def simulateResponse (device, response_length):
-    totalaccepted, totalrejected, totalGenerated = 0, 0, 0
-    while totalGenerated < response_length:
-        accepted, rejected = simulateRound(device, response_length - totalGenerated)
-        totalaccepted += accepted
-        totalrejected += rejected
-        totalGenerated += (accepted + rejected)
-        print("")
-        print(response_length)
-        print(totalGenerated)
+def run_multi_edge_sync(devices, response_length, verifier_token_time, speculative_window, seed=10):
+    rnd = random.Random(seed)
 
-    
-    latency = device.draft_token_time * (totalGenerated)
-    return SimulationResult(
-        latency=latency,
-        accuracy=device.accuracyprediction,
-        numOfAcceptedTokens=totalaccepted,
-        numOfRejectedTokens=totalrejected,
-        num_devices=1,
-        is_async=False
+    total_accepted, total_rejected, total_generated = 0, 0, 0
+    draft_calls, verifier_calls = 0, 0
+    rounds = 0
+    total_latency = 0.0
 
-    )
+    round_schedule = [
+        [devices[0], devices[2]],
+        [devices[1], devices[2], devices[3]],
+        [devices[0], devices[3]],
+    ]
 
-def simulateMultiDeviceResponse (devices, response_length, communication_times):
-    totalaccepted, totalrejected, totalGenerated = 0, 0, 0
-    totalLatency = 0.0
-    deviceIndex = 0
+    while total_generated < response_length:
+        schedule = round_schedule[rounds % len(round_schedule)]
+        rounds += 1
 
-    while totalGenerated < response_length:
-        device = devices[deviceIndex % len(devices)]
-        delay = communication_times[deviceIndex % len(communication_times)]
-        tokensRemaining = response_length - totalGenerated
-        accepted, rejected = simulateRound(device, tokensRemaining)
+        tokens_remaining = response_length - total_generated
+        candidates = []
+        arrival_times = []
 
-        tokensAttempted = accepted + rejected
-        roundLatency = delay * 2 + device.draft_token_time * tokensAttempted
-        totalLatency += roundLatency
+        for device in schedule:
+            accepted, rejected = simulate_round(device, tokens_remaining, speculative_window, rnd)
+            tokens_attempted = accepted + rejected
 
-        if rejected > 0:
-            tokensAdvanced = min(accepted+1, tokensRemaining)
+            arrival_time = device.communication_time + (device.draft_token_time * tokens_attempted)
+            arrival_times.append(arrival_time)
+            candidates.append({
+                "device": device,
+                "accepted": accepted,
+                "rejected": rejected,
+                "arrival_time": arrival_time
+            })
+            draft_calls += 1
+
+        # Verifier waits for ALL devices to finish before it can start checking
+        barrier = max(arrival_times)
+        verifier_calls += 1
+
+        # Pick the best candidate (the one with the earliest arrival time)
+        candidates.sort(key=lambda x: x["arrival_time"])
+        best = candidates[0]
+
+        round_latency = barrier + verifier_token_time
+
+        if best["rejected"] > 0:
+            tokens_advanced = min(best["accepted"] + 1, tokens_remaining)
         else:
-            tokensAdvanced = min(accepted, tokensRemaining)
+            tokens_advanced = min(best["accepted"], tokens_remaining)
 
-        totalaccepted += accepted
-        totalrejected += rejected
-        totalGenerated += tokensAdvanced
+        total_accepted += best["accepted"]
+        total_rejected += best["rejected"]
+        total_generated += tokens_advanced
+        total_latency += round_latency
 
-        print(
-            f"Device {device.device_id} generated {tokensAttempted} tokens, "
-            f"accepted: {accepted}, "
-            f"rejected: {rejected}, "
-            f"advanced: {tokensAdvanced}, "
-            f"totalGenerated: {totalGenerated}/{response_length}, "
-            f"roundLatency: {roundLatency:.2f}s, "
-            f"totalLatency: {totalLatency:.2f}s"
-        )
-            
-        
-        deviceIndex += 1
-    
-    totalAccuracy = 0
-    for i in devices:
-        totalAccuracy += i.accuracyprediction
-    averageAccuracy = totalAccuracy / len(devices)
+        print("Round", rounds,
+              "| selected device:", [d.device_id for d in schedule],
+              "| device:", best["device"].device_id,
+              "| accepted:", best["accepted"],
+              "| rejected:", best["rejected"],
+              "| advanced:", tokens_advanced,
+              "| total:", total_generated, "/", response_length,
+              "| barrier:", round(barrier, 2),
+              "| roundLatency:", round(round_latency, 2))
+
+    if total_accepted + total_rejected > 0: 
+        total_accuracy = total_accepted / (total_accepted + total_rejected)
+    else:
+        total_accuracy = 0.0
 
     return SimulationResult(
-        latency=totalLatency,
-        accuracy=averageAccuracy,
-        numOfAcceptedTokens=totalaccepted,
-        numOfRejectedTokens=totalrejected,
+        latency=total_latency,
+        accuracy=total_accuracy,
+        numOfAcceptedTokens=total_accepted,
+        numOfRejectedTokens=total_rejected,
         num_devices=len(devices),
         is_async=False
     )
 
 
-    
-
-def main(): 
-    device = EdgeDevice(device_id="device_1", draft_token_time=0.5, accuracyprediction=0.8, numberOftokensGenerated=10, communication_time = 0.1)
-
-    device2 = EdgeDevice(device_id="device-2", draft_token_time=0.8, accuracyprediction=0.9, numberOftokensGenerated=4, communication_time = 0.2)
-    device3 = EdgeDevice(device_id="device-3", draft_token_time=0.2, accuracyprediction=0.7, numberOftokensGenerated=3, communication_time = 0.3)
-    device4 = EdgeDevice(device_id="device-4", draft_token_time=0.3, accuracyprediction=0.85, numberOftokensGenerated=3, communication_time = 0.4)
-    communication_times = [device.communication_time, device2.communication_time, device3.communication_time]
+def main():
+    device1 = EdgeDevice(device_id="device-1", draft_token_time=5.6, accuracyprediction=0.9, numberOftokensGenerated=10, communication_time=6.7)
+    device2 = EdgeDevice(device_id="device-2", draft_token_time=9.2, accuracyprediction=0.6, numberOftokensGenerated=4, communication_time=3.3)
+    device3 = EdgeDevice(device_id="device-3", draft_token_time=6.2, accuracyprediction=0.7, numberOftokensGenerated=3, communication_time=3.1)
+    device4 = EdgeDevice(device_id="device-4", draft_token_time=7.1, accuracyprediction=0.75, numberOftokensGenerated=3, communication_time=2.8)
 
     response_length = 10
+    verifier_time = 30
+    target_token_time = 40
+    speculative_window = 3
+    seed = 10
+    
 
-
-    print("Simulating single device response:")
-    result = simulateResponse(device, response_length)
-    print(result)
+    baseline = run_baseline(response_length, target_token_time)
+    print("Baseline latency:", baseline.latency)
 
     print("\nSimulating multi-device response:")
-    multi_device_result = simulateMultiDeviceResponse([device, device2, device3, device4], response_length, communication_times)
-    print(multi_device_result)
+    multi_result = run_multi_edge_sync([device1, device2, device3, device4], response_length, verifier_time, speculative_window, seed)
+    print(multi_result)
+
+    speedup = baseline.latency / multi_result.latency
+    print("\nSpeedup of multi-device over baseline:", round(speedup, 2))
 
 
 if __name__ == "__main__":

@@ -5,8 +5,6 @@ from simulationInputMetrics import SimulationConfig
 from Simulator import MultiEdgeSpeculativeSimulator
 from plot import plot_results
 import random
-import matplotlib.pyplot as plt
-import numpy as np
 
 def main():
     device1 = EdgeDevice(device_id="device-1", draft_token_time=5.6, accuracyprediction=0.9, numberOftokensGenerated=10, communication_time=6.7)
@@ -45,8 +43,22 @@ def main():
     print("\nSpeedup of multi-device over baseline:", round(speedup, 2))
     
     # Plot the results
-    plot_results(xpoints=[0.5, 0.6, 0.7, 0.8, 0.9], ypoints=[427.1, 406.2, 316.9, 316.9, 222], xlabel="Draft Accuracy", ylabel="Latency")
-    plot_results(xpoints=[1, 3, 5, 8, 10], ypoints=[320.7, 334.7, 348.7, 369.7, 383.7], xlabel="Communication Time", ylabel="Latency")
+    plot_results(
+        xpoints=[
+            [0.5, 0.6, 0.7, 0.8, 0.9],
+        ],
+        y_list=[
+            [283.54, 268.86, 232, 239.5, 202.8],
+            [423.44, 358.398, 296.02, 289.798, 310.438],
+            [470.44, 437.82, 330.76, 312.64, 294.92],
+        ],
+        xlabel="Draft Accuracy",
+        ylabel="Latency",
+        colors=["blue", "red", "green"],
+        labels=["1 Device", "2 Devices", "3 Devices"],
+        line_style=["-", "--", "-."],
+        marker=["o", "s", "^"]
+    )
 
 
 if __name__ == "__main__":

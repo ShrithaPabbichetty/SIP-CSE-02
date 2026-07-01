@@ -45,8 +45,9 @@ def main():
     print("\nSpeedup of multi-device over baseline:", round(speedup, 2))
     
     # Plot the results
-    plot_results(xpoints=[0.5, 0.6, 0.7, 0.8, 0.9], ypoints=[427.1, 406.2, 316.9, 316.9, 222], xlabel="Draft Accuracy", ylabel="Latency")
-    plot_results(xpoints=[1, 3, 5, 8, 10], ypoints=[320.7, 334.7, 348.7, 369.7, 383.7], xlabel="Communication Time", ylabel="Latency")
+    plot_results(xpoints=[0.5, 0.6, 0.7, 0.8, 0.9], y_list=[[427.1], [406.2], [316.9], [316.9], [222]], xlabel="Draft Accuracy", ylabel="Latency", colors=["blue"], line_style="dashed")
+    plot_results(xpoints=[1, 3, 5, 8, 10], y_list=[[320.7], [334.7], [348.7], [369.7], [383.7]], xlabel="Communication Time", ylabel="Latency", colors=["red"], line_style="--")
+    plot_results(xpoints=[0.5, 0.6, 0.7, 0.8, 0.9], y_list=[[400], [400], [400], [400], [400]], xlabel="Draft Accuracy", ylabel="Latency", colors=["green"], line_style="-.")
 
 
 if __name__ == "__main__":

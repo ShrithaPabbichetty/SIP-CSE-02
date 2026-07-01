@@ -60,6 +60,21 @@ def main():
         marker=["o", "s", "^"]
     )
 
+    plot_results(
+        xpoints=[1, 3, 5, 8, 10],
+        y_list=[
+            [260.56, 269.64, 267.84, 316.84, 342.44],
+            [302.48, 290.34, 299.92, 333.98, 388.5],
+            [360.54, 434.36, 392.84, 453.12, 430.2]
+        ],
+        xlabel="Communication Time",
+        ylabel="Latency",
+        colors=["blue", "red", "green"],
+        labels=["Fast Devices", "Mixed Devices", "All Devices"],
+        line_style=["-", "--", "-."],
+        marker=["o", "s", "^"]
+    )
+
 
 if __name__ == "__main__":
     main()

@@ -12,4 +12,3 @@ class SimulationConfig:
     speculative_window: int
     seed: int = 10
     round_schedule: list[list[str]] = field(default_factory=list)
-    scheduling_policy: str = "manual"

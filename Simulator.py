@@ -56,15 +56,7 @@ class MultiEdgeSpeculativeSimulator:
         return accepted, rejected
 
     def get_round_schedule(self, rounds):
-        if self.config.scheduling_policy == "manual":
-            return self.round_schedule[rounds % len(self.round_schedule)]
-
-        elif self.config.scheduling_policy == "random":
-        # Randomly choose 2
-            return self.rnd.sample(self.devices, 2)
-
-        else:
-            raise ValueError("Unknown scheduling policy")
+        return self.round_schedule[rounds % len(self.round_schedule)]
 
     def simulate_device_draft(self, device, tokens_remaining):
         accepted, rejected = self.simulate_round(device, tokens_remaining)

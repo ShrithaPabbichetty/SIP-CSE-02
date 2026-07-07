@@ -1,4 +1,3 @@
-
 from simulationOutputMetrics import SimulationResult
 from edgeDevice import EdgeDevice
 from simulationInputMetrics import SimulationConfig
@@ -7,12 +6,31 @@ from plot import plot_results
 import random
 
 def main():
-    device1 = EdgeDevice(device_id="device-1", draft_token_time=5.6, accuracy=0.9, number_of_tokens_generated=10, communication_time=6.7)
-    device2 = EdgeDevice(device_id="device-2", draft_token_time=9.2, accuracy=0.6, number_of_tokens_generated=4, communication_time=3.3)
-    device3 = EdgeDevice(device_id="device-3", draft_token_time=6.2, accuracy=0.7, number_of_tokens_generated=3, communication_time=3.1)
-    device4 = EdgeDevice(device_id="device-4", draft_token_time=7.1, accuracy=0.75, number_of_tokens_generated=3, communication_time=2.8)
+    device1 = EdgeDevice(device_id="device-1", draft_token_time=5.6, accuracy=0.9, number_of_tokens_generated=10, communication_time=10)
+    device2 = EdgeDevice(device_id="device-2", draft_token_time=9.2, accuracy=0.6, number_of_tokens_generated=4, communication_time=10)
+    device3 = EdgeDevice(device_id="device-3", draft_token_time=6.2, accuracy=0.7, number_of_tokens_generated=3, communication_time=10)
+    device4 = EdgeDevice(device_id="device-4", draft_token_time=7.1, accuracy=0.75, number_of_tokens_generated=3, communication_time=10)
+
+    
 
     devices = [device1, device2, device3, device4]
+    '''random.shuffle(devices)
+
+    n = len(devices)
+    round_schedule = []
+    for i in range(n):
+        round_schedule.append([devices[i], devices[(i + 1) % n]])
+    
+    print("Round schedule:")
+    for i, rnd in enumerate(round_schedule, 1):
+        print(f"Round {i}: {[d.device_id for d in rnd]}")'''
+    
+    sorted_devices = sorted(devices, key=lambda d: d.accuracy, reverse=True)
+    top_two = sorted_devices[:2]
+
+    round_schedule = [
+        top_two,  # Round 1: Top two devices
+    ]
 
     config = SimulationConfig(
         num_devices=len(devices),
@@ -22,12 +40,8 @@ def main():
         target_token_time=40,
         verifier_time=30,
         speculative_window=3,
-        seed=10,
-        round_schedule=[
-            [device1, device3],
-            [device2, device3, device4],
-            [device1, device4],
-        ]
+        seed=random.randint(0, 10000),
+        round_schedule=round_schedule
     )
 
     sim = MultiEdgeSpeculativeSimulator(config)
@@ -116,5 +130,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
     main()

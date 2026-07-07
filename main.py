@@ -14,6 +14,20 @@ def main():
 
     devices = [device1, device2, device3, device4]
 
+    
+
+    devices = [device1, device2, device3, device4]
+    random.shuffle(devices)
+
+    n = len(devices)
+    round_schedule = []
+    for i in range(n):
+        round_schedule.append([devices[i], devices[(i + 1) % n]])
+    
+    print("Round schedule:")
+    for i, rnd in enumerate(round_schedule, 1):
+        print(f"Round {i}: {[d.device_id for d in rnd]}")
+
     config = SimulationConfig(
         num_devices=len(devices),
         is_async=False,
@@ -22,12 +36,8 @@ def main():
         target_token_time=40,
         verifier_time=30,
         speculative_window=3,
-        seed=10,
-        round_schedule=[
-            [device1, device3],
-            [device2, device3, device4],
-            [device1, device4],
-        ]
+        seed=random.random(),
+        round_schedule=[selected_devices] 
     )
 
     sim = MultiEdgeSpeculativeSimulator(config)
@@ -116,5 +126,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
     main()

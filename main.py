@@ -19,12 +19,35 @@ def main():
 
    devices = [device1, device2, device3, device4]
 
+   #round robin schedule
+    '''random.shuffle(devices)
 
+    n = len(devices)
+    round_schedule = []
+    for i in range(n):
+        round_schedule.append([devices[i], devices[(i + 1) % n]])
+    
+    print("Round schedule:")
+    for i, rnd in enumerate(round_schedule, 1):
+        print(f"Round {i}: {[d.device_id for d in rnd]}")'''
+    
+    # highest accuracy schedule
+    sorted_devices = sorted(devices, key=lambda d: d.accuracy, reverse=True)
+    top_two = sorted_devices[:2]
 
-   random_schedule = [
+    round_schedule = [
+        top_two,  # Round 1: Top two devices
+    ]
+
+    # random 
+    '''round_schedule = [
        random.sample(devices, 2)
        for _ in range(20)
-   ]
+    ]'''
+
+    # least latency schedule
+    '''round_schedule = select_fastest_devices(devices, top_n=2)'''
+
    
    config = SimulationConfig(
        num_devices=len(devices),
@@ -35,7 +58,7 @@ def main():
        verifier_time=30,
        speculative_window=3,
        seed=10,
-       round_schedule=random_schedule
+       round_schedule=round_schedule
    )
 
 

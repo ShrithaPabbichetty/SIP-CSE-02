@@ -74,7 +74,11 @@ class MultiEdgeSpeculativeSimulator:
         return min(candidates, key=lambda x: x["arrival_time"])
 
     def compute_round_latency(self, arrival_times):
-        barrier = max(arrival_times)
+        if self.is_async:
+            barrier = min(arrival_times)
+        else:
+            barrier = max(arrival_times)
+
         round_latency = barrier + self.verifier_token_time
         return barrier, round_latency
 
@@ -98,7 +102,6 @@ class MultiEdgeSpeculativeSimulator:
 
             arrival_times = [c["arrival_time"] for c in candidates]
 
-            # Verifier waits for ALL devices to finish before it can start checking
             verifier_calls += 1
 
             best = self.select_winning_candidate(candidates)

@@ -7,48 +7,53 @@ from Simulator import MultiEdgeSpeculativeSimulator
 from plot import plot_results, plot_bar_results
 import random
 
-
+def select_fastest_devices(devices, top_n=2):
+    def calculate_total_latency(device):
+        return (device.draft_token_time * device.number_of_tokens_generated) + device.communication_time
+   
+    sorted_devices = sorted(devices, key=calculate_total_latency)
+    return sorted_devices[:top_n]
 
 
 def main():
    device1 = EdgeDevice(device_id="device-1", draft_token_time=5.6, accuracy=0.9, number_of_tokens_generated=10, communication_time=6.7)
-   device2 = EdgeDevice(device_id="device-2", draft_token_time=9.2, accuracy=0.6, number_of_tokens_generated=4, communication_time=3.3)
-   device3 = EdgeDevice(device_id="device-3", draft_token_time=6.2, accuracy=0.7, number_of_tokens_generated=3, communication_time=3.1)
-   device4 = EdgeDevice(device_id="device-4", draft_token_time=7.1, accuracy=0.75, number_of_tokens_generated=3, communication_time=2.8)
+   device2 = EdgeDevice(device_id="device-2", draft_token_time=9.2, accuracy=0.9, number_of_tokens_generated=4, communication_time=3.3)
+   device3 = EdgeDevice(device_id="device-3", draft_token_time=6.2, accuracy=0.9, number_of_tokens_generated=3, communication_time=3.1)
+   device4 = EdgeDevice(device_id="device-4", draft_token_time=7.1, accuracy=0.9, number_of_tokens_generated=3, communication_time=2.8)
 
 
    devices = [device1, device2, device3, device4]
 
    #round robin schedule
-    '''random.shuffle(devices)
+   '''random.shuffle(devices)
 
-    n = len(devices)
-    round_schedule = []
-    for i in range(n):
-        round_schedule.append([devices[i], devices[(i + 1) % n]])
-    
-    print("Round schedule:")
-    for i, rnd in enumerate(round_schedule, 1):
-        print(f"Round {i}: {[d.device_id for d in rnd]}")'''
-    
-    # highest accuracy schedule
-    sorted_devices = sorted(devices, key=lambda d: d.accuracy, reverse=True)
-    top_two = sorted_devices[:2]
-
-    round_schedule = [
-        top_two,  # Round 1: Top two devices
-    ]
-
-    # random 
-    '''round_schedule = [
-       random.sample(devices, 2)
-       for _ in range(20)
-    ]'''
-
-    # least latency schedule
-    '''round_schedule = select_fastest_devices(devices, top_n=2)'''
-
+   n = len(devices)
+   round_schedule = []
+   for i in range(n):
+       round_schedule.append([devices[i], devices[(i + 1) % n]])
    
+   print("Round schedule:")
+   for i, rnd in enumerate(round_schedule, 1):
+       print(f"Round {i}: {[d.device_id for d in rnd]}")'''
+   
+   # highest accuracy schedule
+   sorted_devices = sorted(devices, key=lambda d: d.accuracy, reverse=True)
+   top_two = sorted_devices[:2]
+
+   round_schedule = [
+       top_two,  # Round 1: Top two devices
+   ]
+
+   # random 
+   '''round_schedule = [
+      random.sample(devices, 2)
+      for _ in range(20)
+   ]'''
+
+   # least latency schedule
+   '''round_schedule = select_fastest_devices(devices, top_n=2)'''
+
+
    config = SimulationConfig(
        num_devices=len(devices),
        is_async=True,
@@ -57,7 +62,7 @@ def main():
        target_token_time=40,
        verifier_time=30,
        speculative_window=3,
-       seed=10,
+       seed=random.randint(1, 1000),
        round_schedule=round_schedule
    )
 
@@ -79,19 +84,19 @@ def main():
 
 
    # ---- Draft Accuracy latency data (avg / min / max) ----
-   avg_1 = [283.54, 268.86, 232.0, 239.5, 202.8]
-   min_1 = [239.5, 202.8, 202.0, 202.8, 202.8]
-   max_1 = [312.9, 349.6, 312.9, 276.2, 202.8]
+   #avg_1 = [283.54, 268.86, 232.0, 239.5, 202.8]
+   #min_1 = [239.5, 202.8, 202.0, 202.8, 202.8]
+   #max_1 = [312.9, 349.6, 312.9, 276.2, 202.8]
 
 
-   avg_2 = [423.44, 358.398, 296.02, 289.798, 310.438]
-   min_2 = [282.3, 278.7, 227.0, 225.2, 225.2]
-   max_2 = [524.2, 422.79, 332.2, 352.7, 439.19]
+   #avg_2 = [423.44, 358.398, 296.02, 289.798, 310.438]
+   #min_2 = [282.3, 278.7, 227.0, 225.2, 225.2]
+   #max_2 = [524.2, 422.79, 332.2, 352.7, 439.19]
 
 
-   avg_3 = [470.44, 437.82, 330.76, 312.64, 294.92]
-   min_3 = [411.6, 372.9, 227.0, 271.3, 271.3]
-   max_3 = [519.8, 542.6, 391.3, 393.1, 323.0]
+   #avg_3 = [470.44, 437.82, 330.76, 312.64, 294.92]
+   #min_3 = [411.6, 372.9, 227.0, 271.3, 271.3]
+   #max_3 = [519.8, 542.6, 391.3, 393.1, 323.0]
 
 
    yerr_list_accuracy = [
@@ -100,7 +105,7 @@ def main():
        [[a - lo for a, lo in zip(avg_3, min_3)], [hi - a for a, hi in zip(avg_3, max_3)]],
    ]
 
-
+   # Plot Draft Accuracy vs Latency for 1, 2, and 3 devices
    plot_results(
        xpoints=[
            [0.5, 0.6, 0.7, 0.8, 0.9],
@@ -142,7 +147,7 @@ def main():
        [[a - lo for a, lo in zip(avg_all, min_all)], [hi - a for a, hi in zip(avg_all, max_all)]],
    ]
 
-
+   # Plot Communication Time vs Total Latency for fast, mixed, and all device groups
    plot_results(
        xpoints=[1, 3, 5, 8, 10],
        y_list=[
@@ -199,6 +204,7 @@ yerr_high = [
 ]
 
 
+# Plot Latency vs Number of Selected Devices comparing communication conditions
 plot_results(
    xpoints=x_devices,
    y_list=[
@@ -322,6 +328,7 @@ yerr_ll = [
     [hi - a for a, hi in zip(avg_ll, max_ll)],
 ]
 
+# Plot Latency vs Draft Accuracy comparing scheduling policies
 plot_results(
     xpoints=x_accuracy,
     y_list=[
@@ -346,7 +353,7 @@ plot_results(
     ],
 )
 
-#Latency vs Communication Time
+# Latency vs Communication Time
 
 x_comm = [1, 3, 5, 8, 10]
 
@@ -356,9 +363,9 @@ min_rr = [246.1, 254.6, 273.6, 286.7, 285.9]
 max_rr = [309.8, 367.3, 314.3, 396.2, 480.5]
 
 # Highest Accuracy
-avg_ha = [292.52, 286.12, 300.96, 306.32, 338.16]
-min_ha = [256.2, 224.0, 241.2, 225.6, 310.4]
-max_ha = [391.8, 396.6, 348.0, 453.6, 358.0]
+avg_ha = [225.46, 255.92, 272.14, 307.22, 317.46]
+min_ha = [195.0, 207.1, 241.2, 225.6, 287.8]
+max_ha = [279.0, 293.8, 303.0, 388.1, 386.8]
 
 # Least Latency
 avg_ll = [297.42, 322.12, 340.54, 389.84, 439.40]
@@ -390,6 +397,7 @@ yerr_rand = [
     [hi - a for a, hi in zip(avg_rand, max_rand)],
 ]
 
+# Plot Latency vs Communication Time comparing scheduling policies
 plot_results(
     xpoints=x_comm,
     y_list=[
@@ -417,7 +425,7 @@ plot_results(
     ],
 )
 
-#Scheduler Comparison (Bar Chart)
+# Scheduler Comparison (Bar Chart)
 
 scheduler_labels = [
     "Round Robin",
@@ -438,6 +446,7 @@ yerr = [
     [408.2 - 317.92, 416.8 - 328.94, 344.9 - 267.72, 351.8 - 239.28],
 ]
 
+# Plot scheduler comparison as a bar chart
 plot_bar_results(
     labels=scheduler_labels,
     values=avg_latency,
@@ -535,6 +544,211 @@ plot_results(
     ],
 )
 
+#Async vs Sync: Latency vs Communication Time
+
+x_comm = [1, 3, 5, 8, 10]
+
+# Async
+avg_async = [207.5, 224.0, 249.8, 265.7, 259.6]
+min_async = [180, 188.0, 199.0, 211.0, 217.5]
+max_async = [215.5, 291.5, 272.0, 290.0, 302.0]
+
+# Sync
+avg_sync = [225.46, 255.92, 272.14, 307.22, 317.46]
+min_sync = [195.0, 207.1, 241.2, 225.6, 287.8]
+max_sync = [279.0, 293.8, 303.0, 388.1, 386.8]
+
+yerr_async = [
+    [a - lo for a, lo in zip(avg_async, min_async)],
+    [hi - a for a, hi in zip(avg_async, max_async)],
+]
+
+yerr_sync = [
+    [a - lo for a, lo in zip(avg_sync, min_sync)],
+    [hi - a for a, hi in zip(avg_sync, max_sync)],
+]
+
+plot_results(
+    xpoints=x_comm,
+    y_list=[
+        avg_async,
+        avg_sync,
+    ],
+    xlabel="Communication Time",
+    ylabel="Latency",
+    colors=["blue", "red"],
+    labels=[
+        "Async",
+        "Sync",
+    ],
+    line_style=["-", "--"],
+    marker=["o", "s"],
+    yerr_list=[
+        yerr_async,
+        yerr_sync,
+    ],
+)
+
+#Sync vs Async at a Fixed Setting (Highest Accuracy)
+
+labels = ["Sync", "Async"]
+
+avg_latency = [
+    279.84,
+    217.02,
+]
+
+yerr = [
+    [
+        279.84 - 195.0,
+        217.02 - 195.0,
+    ],
+    [
+        332.8 - 279.84,
+        245.4 - 217.02,
+    ],
+]
+
+plot_bar_results(
+    labels=labels,
+    values=avg_latency,
+    xlabel="Execution Mode",
+    ylabel="Latency",
+    title="Sync vs Async at a Fixed Setting (Highest Accuracy)",
+    colors=["steelblue", "orange"],
+    yerr=yerr,
+)
+
+#Async vs Sync: Latency vs Number of Selected Devices
+
+x_devices = [1, 2, 3, 4]
+
+# Async
+avg_async = [255.86, 225.24, 220.32, 230.84]
+min_async = [195.0, 195.0, 202.1, 195.0]
+max_async = [325.7, 245.4, 249.9, 286.1]
+
+# Sync
+avg_sync = [286.24, 283.72, 351.58, 332.92]
+min_sync = [225.6, 233.6, 225.7, 310.9]
+max_sync = [324.8, 332.0, 463.0, 346.2]
+
+yerr_async = [
+    [a - lo for a, lo in zip(avg_async, min_async)],
+    [hi - a for a, hi in zip(avg_async, max_async)],
+]
+
+yerr_sync = [
+    [a - lo for a, lo in zip(avg_sync, min_sync)],
+    [hi - a for a, hi in zip(avg_sync, max_sync)],
+]
+
+plot_results(
+    xpoints=x_devices,
+    y_list=[
+        avg_async,
+        avg_sync,
+    ],
+    xlabel="Number of Selected Devices",
+    ylabel="Latency",
+    colors=["blue", "red"],
+    labels=[
+        "Async",
+        "Sync",
+    ],
+    line_style=["-", "--"],
+    marker=["o", "s"],
+    yerr_list=[
+        yerr_async,
+        yerr_sync,
+    ],
+)
+
+# ---- Scheduler Comparison (Async Mode) ----
+
+labels = [
+    "Least Latency",
+    "Round Robin",
+    "Random",
+    "Highest Accuracy",
+]
+
+avg_latency = [
+    222.4,
+    228.0,
+    264.82,
+    250.04,
+]
+
+yerr = [
+    [
+        222.4 - 197.6,
+        228.0 - 197.6,
+        264.82 - 231.2,
+        250.04 - 197.6,
+    ],
+    [
+        288.0 - 222.4,
+        279.0 - 228.0,
+        289.5 - 264.82,
+        326.8 - 250.04,
+    ],
+]
+
+plot_bar_results(
+    labels=labels,
+    values=avg_latency,
+    xlabel="Scheduling Policy",
+    ylabel="Latency",
+    title="Scheduler Comparison (Async Mode)",
+    colors=["red", "blue", "orange", "green"],
+    yerr=yerr,
+)
+
+# ---- Sync vs Async (Highest Accuracy): Latency vs Draft Accuracy ----
+
+x_accuracy = [0.5, 0.6, 0.7, 0.8, 0.9]
+
+# Async
+avg_async = [323.64, 313.94, 278.60, 291.56, 219.84]
+min_async = [284.0, 276.4, 202.8, 254.4, 202.8]
+max_async = [354.2, 350.0, 349.8, 343.6, 243.5]
+
+# Sync
+avg_sync = [229.7285714, 229.3428571, 222.5142857, 225.5571429, 212.1714286]
+min_sync = [202.1, 195.0, 195.0, 195.0, 195.0]
+max_sync = [280.9, 281.6, 245.4, 249.9, 245.4]
+
+yerr_async = [
+    [a - lo for a, lo in zip(avg_async, min_async)],
+    [hi - a for a, hi in zip(avg_async, max_async)],
+]
+
+yerr_sync = [
+    [a - lo for a, lo in zip(avg_sync, min_sync)],
+    [hi - a for a, hi in zip(avg_sync, max_sync)],
+]
+
+plot_results(
+    xpoints=x_accuracy,
+    y_list=[
+        avg_sync,
+        avg_async,
+    ],
+    xlabel="Draft Accuracy",
+    ylabel="Latency",
+    colors=["blue", "red"],
+    labels=[
+        "Sync",
+        "Async",
+    ],
+    line_style=["-", "--"],
+    marker=["o", "s"],
+    yerr_list=[
+        yerr_sync,
+        yerr_async,
+    ],
+)
 
 if __name__ == "__main__":
    main()

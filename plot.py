@@ -1,6 +1,15 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
+plt.rcParams.update({
+    "font.size": 14,
+    "axes.labelsize": 16,
+    "axes.titlesize": 16,
+    "legend.fontsize": 12,
+    "xtick.labelsize": 12,
+    "ytick.labelsize": 12,
+})
+
 
 def plot_results(xpoints, y_list, xlabel, ylabel, colors, labels, line_style='-', marker='o', yerr_list=None):
     if xpoints and isinstance(xpoints[0], (list, tuple, np.ndarray)):
@@ -60,5 +69,4 @@ def plot_bar_results(
     plt.grid(axis="y", linestyle="--", alpha=0.5)
 
     plt.tight_layout()
-    plt.show()
     plt.show()

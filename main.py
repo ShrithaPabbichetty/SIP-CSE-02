@@ -120,7 +120,7 @@ def main():
        ],
        xlabel="Draft Accuracy",
        ylabel="Latency",
-       colors=["blue", "red", "green"],
+       colors=["blue", "dimgray", "red"],
        labels=["1 Device", "2 Devices", "3 Devices"],
        line_style=["-", "--", "-."],
        marker=["o", "s", "^"],
@@ -161,7 +161,7 @@ def main():
        ],
        xlabel="Communication Time",
        ylabel="Latency",
-       colors=["blue", "red", "green"],
+       colors=["blue", "dimgray", "red"],
        labels=["Fast Devices", "Mixed Devices", "All Devices"],
        line_style=["-", "--", "-."],
        marker=["o", "s", "^"],
@@ -219,7 +219,7 @@ plot_results(
    ],
    xlabel="Number of Selected Devices",
    ylabel="Latency",
-   colors=["blue", "red", "green"],
+   colors=["blue", "dimgray", "red"],
    labels=[
        "Low Communication",
        "Medium Communication",
@@ -284,7 +284,7 @@ plot_results(
    ],
    xlabel="Verifier Time",
    ylabel="Speedup vs Baseline",
-   colors=["blue", "red", "green"],
+   colors=["blue", "dimgray", "red"],
    labels=[
        "Draft Accuracy = 0.6",
        "Draft Accuracy = 0.8",
@@ -627,6 +627,7 @@ plot_bar_results(
     title="Sync vs Async at a Fixed Setting (Highest Accuracy)",
     colors=["steelblue", "orange"],
     yerr=yerr,
+    bar_width=0.2,
 )
 
 #Async vs Sync: Latency vs Number of Selected Devices

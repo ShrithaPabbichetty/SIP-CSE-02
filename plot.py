@@ -25,7 +25,10 @@ def plot_results(xpoints, y_list, xlabel, ylabel, colors, labels, line_style='-'
     if ylabel == "Speedup vs Baseline":
         plt.axhline(y=1.0, color="black", linestyle="--", linewidth=1)
     plt.legend()
+    plt.savefig("graph.pdf")
     plt.show()
+
+
 
 def plot_bar_results(
     labels,
@@ -35,15 +38,16 @@ def plot_bar_results(
     title="",
     colors=None,
     yerr=None,
+    bar_width=0.3,
 ):
-    plt.figure(figsize=(7, 5))
+    plt.figure(figsize=(7.7, 4.8))
 
     plt.bar(
         labels,
         values,
         color=colors,
         yerr=yerr,
-        width=0.3,
+        width=bar_width,
         capsize=6,
     )
 
@@ -56,4 +60,5 @@ def plot_bar_results(
     plt.grid(axis="y", linestyle="--", alpha=0.5)
 
     plt.tight_layout()
+    plt.show()
     plt.show()

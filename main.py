@@ -460,7 +460,6 @@ plot_bar_results(
     values=avg_latency,
     xlabel="Scheduling Policy",
     ylabel="Average Latency",
-    title="Scheduler Comparison",
     colors=["orange", "red", "dimgray", "blue"],
     yerr=yerr,
 )
@@ -624,7 +623,6 @@ plot_bar_results(
     values=avg_latency,
     xlabel="Execution Mode",
     ylabel="Latency",
-    title="Sync vs Async at a Fixed Setting (Highest Accuracy)",
     colors=["steelblue", "orange"],
     yerr=yerr,
     bar_width=0.2,
@@ -712,7 +710,6 @@ plot_bar_results(
     values=avg_latency,
     xlabel="Scheduling Policy",
     ylabel="Latency",
-    title="Scheduler Comparison (Async Mode)",
     colors=["dimgray", "orange", "red", "blue"],
     yerr=yerr,
 )

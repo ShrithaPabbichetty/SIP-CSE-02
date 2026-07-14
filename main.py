@@ -1,5 +1,7 @@
 
 
+import matplotlib.pyplot as plt
+
 from simulationOutputMetrics import SimulationResult
 from edgeDevice import EdgeDevice
 from simulationInputMetrics import SimulationConfig
@@ -84,19 +86,19 @@ def main():
 
 
    # ---- Draft Accuracy latency data (avg / min / max) ----
-   #avg_1 = [283.54, 268.86, 232.0, 239.5, 202.8]
-   #min_1 = [239.5, 202.8, 202.0, 202.8, 202.8]
-   #max_1 = [312.9, 349.6, 312.9, 276.2, 202.8]
+   avg_1 = [283.54, 268.86, 232.0, 239.5, 202.8]
+   min_1 = [239.5, 202.8, 202.0, 202.8, 202.8]
+   max_1 = [312.9, 349.6, 312.9, 276.2, 202.8]
 
 
-   #avg_2 = [423.44, 358.398, 296.02, 289.798, 310.438]
-   #min_2 = [282.3, 278.7, 227.0, 225.2, 225.2]
-   #max_2 = [524.2, 422.79, 332.2, 352.7, 439.19]
+   avg_2 = [423.44, 358.398, 296.02, 289.798, 310.438]
+   min_2 = [282.3, 278.7, 227.0, 225.2, 225.2]
+   max_2 = [524.2, 422.79, 332.2, 352.7, 439.19]
 
 
-   #avg_3 = [470.44, 437.82, 330.76, 312.64, 294.92]
-   #min_3 = [411.6, 372.9, 227.0, 271.3, 271.3]
-   #max_3 = [519.8, 542.6, 391.3, 393.1, 323.0]
+   avg_3 = [470.44, 437.82, 330.76, 312.64, 294.92]
+   min_3 = [411.6, 372.9, 227.0, 271.3, 271.3]
+   max_3 = [519.8, 542.6, 391.3, 393.1, 323.0]
 
 
    yerr_list_accuracy = [
@@ -106,6 +108,7 @@ def main():
    ]
 
    # Plot Draft Accuracy vs Latency for 1, 2, and 3 devices
+   plt.figure(figsize=(7.7, 4.8))
    plot_results(
        xpoints=[
            [0.5, 0.6, 0.7, 0.8, 0.9],
@@ -148,6 +151,7 @@ def main():
    ]
 
    # Plot Communication Time vs Total Latency for fast, mixed, and all device groups
+   plt.figure(figsize=(7.7, 4.8))
    plot_results(
        xpoints=[1, 3, 5, 8, 10],
        y_list=[
@@ -205,6 +209,7 @@ yerr_high = [
 
 
 # Plot Latency vs Number of Selected Devices comparing communication conditions
+plt.figure(figsize=(7.7, 4.8))
 plot_results(
    xpoints=x_devices,
    y_list=[
@@ -269,6 +274,7 @@ yerr_high = [
 ]
 
 
+plt.figure(figsize=(7.7, 4.8))
 plot_results(
    xpoints=x_verifier,
    y_list=[
@@ -329,6 +335,7 @@ yerr_ll = [
 ]
 
 # Plot Latency vs Draft Accuracy comparing scheduling policies
+plt.figure(figsize=(7.7, 4.8))
 plot_results(
     xpoints=x_accuracy,
     y_list=[
@@ -338,7 +345,7 @@ plot_results(
     ],
     xlabel="Draft Accuracy",
     ylabel="Latency",
-    colors=["blue", "red", "green"],
+    colors=["orange", "dimgray", "red"],
     labels=[
         "Round Robin",
         "Least Latency",
@@ -398,6 +405,7 @@ yerr_rand = [
 ]
 
 # Plot Latency vs Communication Time comparing scheduling policies
+plt.figure(figsize=(7.7, 4.8))
 plot_results(
     xpoints=x_comm,
     y_list=[
@@ -408,7 +416,7 @@ plot_results(
     ],
     xlabel="Communication Time",
     ylabel="Latency",
-    colors=["blue", "orange", "red", "green"],
+    colors=["orange", "red", "dimgray", "blue"],
     labels=[
         "Round Robin",
         "Random",
@@ -453,7 +461,7 @@ plot_bar_results(
     xlabel="Scheduling Policy",
     ylabel="Average Latency",
     title="Scheduler Comparison",
-    colors=["blue", "orange", "green", "red"],
+    colors=["orange", "red", "dimgray", "blue"],
     yerr=yerr,
 )
 
@@ -502,6 +510,7 @@ yerr_ll = [
     [hi - a for a, hi in zip(avg_ll, max_ll)],
 ]
 
+plt.figure(figsize=(7.7, 4.8))
 plot_results(
     xpoints=x_devices,
     y_list=[
@@ -513,10 +522,10 @@ plot_results(
     xlabel="Number of Selected Devices",
     ylabel="Latency",
     colors=[
-        "green",
-        "blue",
         "red",
-        "purple",
+        "orange",
+        "blue",
+        "dimgray",
     ],
     labels=[
         "Random",
@@ -568,6 +577,7 @@ yerr_sync = [
     [hi - a for a, hi in zip(avg_sync, max_sync)],
 ]
 
+plt.figure(figsize=(7.7, 4.8))
 plot_results(
     xpoints=x_comm,
     y_list=[
@@ -643,6 +653,7 @@ yerr_sync = [
     [hi - a for a, hi in zip(avg_sync, max_sync)],
 ]
 
+plt.figure(figsize=(7.7, 4.8))
 plot_results(
     xpoints=x_devices,
     y_list=[
@@ -701,7 +712,7 @@ plot_bar_results(
     xlabel="Scheduling Policy",
     ylabel="Latency",
     title="Scheduler Comparison (Async Mode)",
-    colors=["red", "blue", "orange", "green"],
+    colors=["dimgray", "orange", "red", "blue"],
     yerr=yerr,
 )
 
@@ -729,6 +740,7 @@ yerr_sync = [
     [hi - a for a, hi in zip(avg_sync, max_sync)],
 ]
 
+plt.figure(figsize=(7.7, 4.8))
 plot_results(
     xpoints=x_accuracy,
     y_list=[

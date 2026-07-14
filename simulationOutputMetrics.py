@@ -4,7 +4,9 @@ from dataclasses import dataclass
 class SimulationResult:
     accuracy: float
     latency: float
-    numOfAcceptedTokens: int
-    numOfRejectedTokens: int
+    num_of_accepted_tokens: int
+    num_of_rejected_tokens: int
     num_devices: int
     is_async: bool
+    draft_calls: int 
+    verifier_calls: int
